@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+ 
+<html>
+  <head>
+    <title>Android Push Notification</title>
+  </head>
+  <body>
+    <header>
+      <h1>Android Push Notification <span>By <a href="https://www.simplifiedcoding.net">Simplified Coding</a></span></h1>
+    </header>
+    <div>
+      <form method="POST" action="https://saibh-42c34.firebaseapp.com/api/send">
+        <div>
+            <label for="token">Token</label><br />
+            <input type="text" name="token" id="token" placeholder="cDj56lB8Oc4:APA91bExf-CMtLn2dFG7Hd72K_YiF6JZQsTEl17i6dLzqpwC67jcUn_UL1SMLChDjPM2wqtBsRQOkXpawUR7ZUT9ObD88oQs_q_i-mYxb5Q51KsSqNf8mhSxWuCsPlxpPcayZ5Xd5WMK"/>
+          </div>
+        <div>
+          <label for="title">Title</label><br />
+          <input type="text" name="title" id="title" placeholder="Hey there this is a nice notification"/>
+        </div>
+        <div>
+            <label for="body">Body</label><br />
+            <input type="text" name="body" id="body" placeholder="More details about your notification" />
+        </div>
+        <div>
+          <button>Send</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
