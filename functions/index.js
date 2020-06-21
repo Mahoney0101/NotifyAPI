@@ -12,58 +12,60 @@ var request = require('request');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
  
-router.post('/send', function(req, res){
- 
-    getAccessToken().then(function(access_token){
- 
-        var title = req.body.title; 
-        var body = req.body.body; 
-        var token = req.body.token; 
- 
-        request.post({
-            headers:{
-                Authorization: 'Bearer '+access_token
-            }, 
-            url: "https://fcm.googleapis.com/v1/projects/saibh-42c34/messages:send", 
-            body: JSON.stringify(
-                {
-                    "message":{
-                        "token" : token,
-                        "notification" : {
-                            "body" : body,
-                            "title" : title,
-                        }
-                    }
-                }
-            )
-        }, function(error, response, body){
-            res.end(body);
-            console.log(body);
-        });
+//let functions = require('firebase-functions');
+let admin = require('firebase-admin');
+admin.initializeApp(functions.config().firebase);
+
+exports.sendPush = functions.database.ref('/messages/{messagesId}').onWrite((change, context) => {
+    let projectStateChanged = false;
+    let projectCreated = false;
+    let projectData = change.after.val();
+    if (change.after.exists()) {
+        projectCreated = true;
+    }
+    if (!projectCreated && change) {
+        projectStateChanged = true;
+    }
+
+    let msg = 'test notification on msg send';
+    let sender ='';
+    if (projectCreated) {
+        msg = `${projectData.messageText}`;
+        sender = `${projectData.messageUser}`;
+    }
+
+    return loadUsers().then(tokens => {
+        let token = [];
+        for (let user of tokens) {
+            token.push(user);
+        }
+
+        let payload = {
+            notification: {
+                title: sender,
+                body: msg,
+                sound: 'default',
+                badge: '1'
+            }
+        };
+        
+        return admin.messaging().sendToDevice(tokens, payload);
     });
 });
- 
-app.use('/api', router);
- 
- 
-function getAccessToken(){
-    return new Promise(function(resolve, reject){
-        var key = require("./service-account.json");
-        var jwtClient = new google.auth.JWT(
-            key.client_email,
-            null,
-            key.private_key,
-            SCOPES,
-            null
-        );
-        jwtClient.authorize(function(err, tokens){
-            if(err){
-                reject(err);
-                return; 
+
+function loadUsers() {
+    let dbRef = admin.database().ref('/tokens');
+    let defer = new Promise((resolve, reject) => {
+        dbRef.once('value', (snap) => {
+            let data = snap.val();
+            let users = [];
+            for (var property in data) {
+                users.push(data[property]);
             }
-            resolve(tokens.access_token);
+            resolve(users);
+        }, (err) => {
+            reject(err);
         });
     });
+    return defer;
 }
- 
-exports.api = functions.https.onRequest(app);
